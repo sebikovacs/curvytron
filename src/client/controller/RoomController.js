@@ -12,14 +12,18 @@
  */
 function RoomController($scope, $routeParams, $location, client, repository, profile, chat, notifier)
 {
+    var search = $location.search();
+
     this.$scope         = $scope;
     this.$location      = $location;
+    this.$routeParams   = $routeParams;
     this.client         = client;
     this.profile        = profile;
     this.chat           = chat;
     this.notifier       = notifier;
     this.hasTouch       = typeof(window.ontouchstart) !== 'undefined';
     this.name           = decodeURIComponent($routeParams.name);
+    this.password       = typeof(search.password) !== 'undefined' ? search.password : null;
     this.repository     = repository;
     this.controlSynchro = false;
     this.useTouch       = false;
@@ -42,6 +46,7 @@ function RoomController($scope, $routeParams, $location, client, repository, pro
     this.updateProfile    = this.updateProfile.bind(this);
     this.toggleParameters = this.toggleParameters.bind(this);
     this.onRoomMaster     = this.onRoomMaster.bind(this);
+    this.onConfigOpen     = this.onConfigOpen.bind(this);
     this.start            = this.start.bind(this);
 
     this.$scope.$on('$destroy', this.leaveRoom);
@@ -83,7 +88,7 @@ RoomController.prototype.joinRoom = function()
     }
 
     this.profile.off('close', this.joinRoom);
-    this.repository.join(this.name, this.onJoined);
+    this.repository.join(this.name, this.password, this.onJoined);
 };
 
 /**
@@ -100,7 +105,7 @@ RoomController.prototype.onJoined = function(result)
         this.attachEvents();
         this.addProfileUser();
     } else {
-        console.error('Could not join room %s', result.name);
+        console.error('Could not join room %s: %s', result.name, result.error);
         this.goHome();
     }
 
@@ -112,11 +117,15 @@ RoomController.prototype.onJoined = function(result)
  */
 RoomController.prototype.leaveRoom = function()
 {
-    if (this.room && this.$location.path() !== this.room.gameUrl) {
-        this.repository.leave();
-    }
+    var path = this.$location.path();
 
-    this.detachEvents();
+    if (this.room && path !== this.room.getUrl()) {
+        if (path !== this.room.getGameUrl()) {
+            this.repository.leave();
+        }
+
+        this.detachEvents();
+    }
 };
 
 /**
@@ -133,6 +142,7 @@ RoomController.prototype.attachEvents = function()
     this.repository.on('client:activity', this.applyScope);
     this.repository.on('room:master', this.onRoomMaster);
     this.repository.on('room:game:start', this.start);
+    this.repository.on('room:config:open', this.onConfigOpen);
 
     for (var i = this.room.players.items.length - 1; i >= 0; i--) {
         this.room.players.items[i].on('control:change', this.onControlChange);
@@ -153,6 +163,7 @@ RoomController.prototype.detachEvents = function()
     this.repository.off('client:activity', this.applyScope);
     this.repository.off('room:master', this.onRoomMaster);
     this.repository.off('room:game:start', this.start);
+    this.repository.off('room:config:open', this.onConfigOpen);
 
     if (this.room) {
         for (var i = this.room.players.items.length - 1; i >= 0; i--) {
@@ -226,6 +237,15 @@ RoomController.prototype.kickPlayer = function(player)
         }
         repository.applyScope();
     });
+};
+
+/**
+ * Go room config open
+ */
+RoomController.prototype.onConfigOpen = function(e)
+{
+    this.$location.search('password', this.room.config.password);
+    this.applyScope();
 };
 
 /**

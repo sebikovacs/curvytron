@@ -556,7 +556,7 @@ GameController.prototype.updateBorders = function()
  */
 GameController.prototype.onExit = function()
 {
-    if ((this.room && this.$location.path() !== this.room.url) || (this.game && this.game.started)) {
+    if ((this.room && this.$location.path() !== this.room.getUrl()) || (this.game && this.game.started)) {
         this.repository.leave();
         this.chat.clear();
         this.killLog.clear();
@@ -626,7 +626,7 @@ GameController.prototype.close = function()
  */
 GameController.prototype.backToRoom = function()
 {
-    this.$location.path(this.room.url);
+    this.$location.path(this.room.getUrl());
 };
 
 /**
