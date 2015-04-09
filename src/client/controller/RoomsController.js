@@ -46,6 +46,7 @@ RoomsController.prototype.attachEvents = function()
     this.repository.on('room:close', this.applyScope);
     this.repository.on('room:players', this.applyScope);
     this.repository.on('room:game', this.applyScope);
+    this.repository.on('room:config:open', this.applyScope);
 
     this.repository.start();
 };
@@ -61,6 +62,7 @@ RoomsController.prototype.detachEvents = function()
     this.repository.off('room:close', this.applyScope);
     this.repository.off('room:players', this.applyScope);
     this.repository.off('room:game', this.applyScope);
+    this.repository.off('room:config:open', this.applyScope);
 };
 
 /**
