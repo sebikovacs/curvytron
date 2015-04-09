@@ -383,7 +383,7 @@ RoomController.prototype.setTouch = function()
  */
 RoomController.prototype.start = function(e)
 {
-    this.$location.path(this.room.gameUrl);
+    this.$location.path(this.room.getGameUrl());
     this.applyScope();
 };
 
